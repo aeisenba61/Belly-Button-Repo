@@ -13,62 +13,82 @@ Plotly.d3.json("/names", function(error, response) {
     }
 })
 
-// Pie
-Plotly.d3.json("/samples/BB_940", function(error, response) {
+// OTU Descriptions
+Plotly.d3.json("/otu", function(error, otu) {
     if (error) return console.warn(error);
-  	var data = [{ values: response.sample_values.slice(0,9),
-                  labels: response.otu_ids.slice(0,9),
-                  type: 'pie',
-                  text: "OTU: " + response.otu_ids,
-                  textposition: 'inside',
-                  hole: .5,
-                  hoverinfo: "labels"}];
-
-  	var layout = {height: 400, 
-  		            width: 500,
-                  margin: {
-                    l: 50, r: 50, b: 50, t: 50
-                  },
-  		            title: "Top 10 Sample Values",
-  		            annotations: [{
-              			font: {
-  				            size: 20
-  			           },
-  			          showarrow: false,
-  			          text: 'BBs'}]
-  	};
-
-  	Plotly.plot("pie", data, layout)
-
+    pie(otu);
+    bubble(otu);
 })
+
+
+// Pie
+function pie(otu) {
+  Plotly.d3.json("/samples/BB_940", function(error, response) {
+      if (error) return console.warn(error);
+      var otu_labels = []
+      for (i in response.otu_ids.slice(0,9)) {
+        otu_labels.push(otu[i]);
+      }
+    	var data = [{ values: response.sample_values.slice(0,9),
+                    labels: response.otu_ids.slice(0,9),
+                    type: 'pie',
+                    text: otu_labels,
+                    textinfo: 'percent',
+                    textposition: 'inside',
+                    hole: .5,
+                    hoverinfo: "text + values + labels"}];
+
+    	var layout = {height: 425, 
+    		            width: 400,
+                    margin: {
+                      l: 25, r: 25, b: 25, t: 75
+                    },
+    		            title: "Top 10 Sample Values",
+    		            annotations: [{
+                			font: {
+    				            size: 20
+    			           },
+    			          showarrow: false,
+    			          text: 'BBs'}]
+    	};
+
+    	Plotly.plot("pie", data, layout)
+  })
+}
 
 //bubbles
-Plotly.d3.json("/samples/BB_940", function(error, response){
-    if (error) return console.warn(error);
-    var data = [{
-        x: response.otu_ids,
-        y: response.sample_values,
-        mode: 'markers',
-        hoverinfo: "x+y",
-        marker: {
-            color: ['E7641D',
-                       'D46E19',
-                       'C17816',
-                       'AF8213',
-                       '9C8C10'],
-            size: response.sample_values
-        }
-    }];
-    var layout = {
-        height: 600,
-        width: 900,
-        title: "Belly Button Bubble Chart",
-        xaxis: {title: "OTU IDs"},
-        yaxis: {title: "Sample values"}
-    };
-    Plotly.plot("bubble", data, layout);
-})
-
+function bubble(otu) {
+  Plotly.d3.json("/samples/BB_940", function(error, response){
+      if (error) return console.warn(error);
+      var otu_labels = [];
+      for (i in response.otu_ids) {
+        otu_labels.push(otu[i]);
+      }
+      var data = [{
+          x: response.otu_ids,
+          y: response.sample_values,
+          mode: 'markers',
+          text: otu_labels,
+          hoverinfo: "'('+x+','+y+')'+text",
+          marker: {
+              color: ['E7641D',
+                         'D46E19',
+                         'C17816',
+                         'AF8213',
+                         '9C8C10'],
+              size: response.sample_values
+          }
+      }];
+      var layout = {
+          height: 600,
+          width: 900,
+          title: "Belly Button Bubble Chart",
+          xaxis: {title: "OTU IDs"},
+          yaxis: {title: "Sample values"}
+      };
+      Plotly.plot("bubble", data, layout);
+  })
+}
 
 //metatable
 var metatable = document.getElementById("metatable");
@@ -76,44 +96,44 @@ Plotly.d3.json("/metadata/BB_940", function(error, response){
     if (error) return console.warn(error);
     htmltable = ""
     for (key in response) {
-    	htmltable += "<b>" + key + " </b>"+ response[key] + "<br>";
+    	htmltable += "<b>" + key + ": " + " </b>"+ response[key] + "<br>";
     }
     metatable.innerHTML = htmltable
 })
 
 
 //Gauge
-Plotly.d3.json("/wfreq/BB_940", function(error, response){
-    if (error) return console.warn(error);
-    var level = response;
+Plotly.d3.json("/wfreq/BB_940", function(error, level){
+  gauge(level);
+})
+
+function gauge(level) {
     var degrees = 9 - level,
     	radius = .5;
-    var radians = degrees * Math.PI / 180;
+    var radians = degrees * Math.PI / 9;
     var x = radius * Math.cos(radians);
     var y = radius * Math.sin(radians);
-	var mainPath = 'M -.0 -0.05 L .0 0.05 L ',
-		pathX = String(x),
+    var mainPath = 'M -.0 -0.025 L .0 0.025 L ',
+		  pathX = String(x),
      	space = ' ',
-	 	pathY = String(y),
-     	pathEnd = ' Z';
-	var path = mainPath.concat(pathX,space,pathY,pathEnd);
-	var data = [{ type: 'scatter',
+	 	  pathY = String(y),
+      pathEnd = ' Z';
+    var path = mainPath.concat(pathX,space,pathY,pathEnd);
+    var data = [{ type: 'scatter',
    		x: [0], y:[0],
     	marker: {size: 28, color:'850000'},
     	showlegend: false,
-    	name: 'frequency',
+    	name: 'Wash Frequency',
     	text: level,
-      direction: "counter-clockwise",
+      // direction: "counter-clockwise",
     	hoverinfo: 'text+name'},
   		{ values: [50/9,50/9,50/9,50/9,50/9,50/9,50/9,50/9,50/9,50],
   		rotation: 90,
   		text: ['8-9', '7-8', '6-7', '5-6',
-            '4-5', '3-4', '2-3', '1-2', '0-1'],
+            '4-5', '3-4', '2-3', '1-2', '0-1' ,''],
   		textinfo: 'text',
   		textposition:'inside',      
   		marker: {colors:['#008000','#228d1b','#359a2d','#46a83e','#55b54e','#64c35f','#73d26f','#81e07f','#90ee90','FFFFFF']},
-  		// labels: ['8-9', '7-8', '6-7', '5-6',
-    //         '4-5', '3-4', '2-3', '1-2', '0-1'],
   		hoverinfo: 'text',
   		hole: .5,
   		type: 'pie',
@@ -129,62 +149,71 @@ Plotly.d3.json("/wfreq/BB_940", function(error, response){
 	        color: '850000'
 	      }
 	    }],
-		title: '<b>Gauge</b> <br> Speed 0-9',
+		title: '<b>Who has been washing their hands a lot?</b> <br> Frequency 0-9',
 		height: 500,
-		width: 700,
+		width: 600,
     margin: {
-                    l: 50, r: 50, b: 50, t: 50
-                  },
+      l: 25, r: 25, b: 25, t: 75
+    },
 		xaxis: {zeroline:false, showticklabels:false, showgrid: false, range: [-1, 1]},
 		yaxis: {zeroline:false, showticklabels:false, showgrid: false, range: [-1, 1]}
 	};
 	Plotly.plot("gauge", data, layout);
-});
+};
 
 
-// Pie
-function updatePie(newdata) {
-	var Pie = document.getElementById("pie");
-	Plotly.restyle(Pie, "labels", [newdata.otu_ids.slice(0,10)]);
-	Plotly.restyle(Pie, "values", [newdata.sample_values.slice(0,10)]);
-}
-
-// Bubble
-function updateBubble(newdata) {
-	var Bubble = document.getElementById('bubble');
-	Plotly.restyle(Bubble, "x", [newdata.otu_ids]);
-	Plotly.restyle(Bubble, "y", [newdata.sample_values]);
-}
-
-// Gauge
-function updateGauge(newdata) {
-	var Gauge = document.getElementById('gauge');
-	Plotly.restyle(Gauge, "level", [newdata.value]);
-}
-
+//Things change
 function optionChanged(sample) {
-    var sampURL = `/samples/${sample}`
-    var metaURL = `/metadata/${sample}`
-    var wfreqURL = `/wfreq/${sample}`
+  var sampURL = `/samples/${sample}`
+  var metaURL = `/metadata/${sample}`
+  var wfreqURL = `/wfreq/${sample}`
 
-    // New data
-    Plotly.d3.json(sampURL, function(error, response) {
-      if (error) return console.warn(error);
-      var vals = [];
-      var labs = [];
-      for (var i = 0; i < 10; i++){
-        vals.push(response.sample_values[i]);
-        labs.push(response.otu_ids[i]);
-      }
-      newdata = {values: vals, labels: labs};
-      updatePie(newdata);
-      updateBub(newdata);
-    });
+  // New data 
+  //otu and sample data
+  Plotly.d3.json(sampURL, function(error, newdata) {
+    if (error) return console.warn(error);
+    newOTU(newdata);
+  });
 
-    Plotly.d3.json(wfreqURL, function(error, response) {
-      if (error) return console.warn(error);
-      var newLevel = [];
-      newdata = newLevel.push(response[0]);
-      updateGauge(newdata);
-    });
+  //metatable
+  Plotly.d3.json(metaURL, function(error, response) {
+    if (error) return console.warn(error);
+    var newhtmltable = [];
+    for (key in response) {
+    newhtmltable += "<b>" + key + ": " + " </b>"+ response[key] + "<br>";
+    }
+    metatable.innerHTML = newhtmltable
+  })
+
+  //freq for gauge
+  Plotly.d3.json(wfreqURL), function(error,newfreq) {
+    if (error) return console.warn(error);
+    gauge(newfreq)
+  }
+}
+
+//restyle
+function newOTU(newdata){
+  Plotly.d3.json("/otu", function(error, otu) {
+    if (error) return console.warn(error);
+    updatePlots(otu, newdata);
+  })
+}
+
+function updatePlots(otu, newdata) {
+  // OTU
+  var new_otu = [];
+  for (i in newdata.otu_ids) {
+        new_otu.push(otu[i]);
+  }
+  // Pie
+  var newPie = document.getElementById("pie");
+  Plotly.restyle(newPie, "labels", [newdata.otu_ids.slice(0,10)]);
+  Plotly.restyle(newPie, "values", [newdata.sample_values.slice(0,10)]);
+  Plotly.restyle(newPie, "text", [new_otu.slice(0,10)]);
+  // Bub
+  var newBubble = document.getElementById("bubble");
+  Plotly.restyle(newBubble, "x", [newdata.otu_ids]);
+  Plotly.restyle(newBubble, "y", [newdata.sample_values]);
+  Plotly.restyle(newBubble, "text", [new_otu]);
 }

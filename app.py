@@ -1,6 +1,6 @@
 # import necessary libraries
 import numpy as np
-
+import os
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session, load_only
 from sqlalchemy import create_engine, func, desc, inspect
@@ -104,4 +104,8 @@ def samp(sample):
     return jsonify(sampdict)
 
 if __name__ == "__main__":
-	app.run(port=5001)
+	app.run(port=5005)
+
+# if __name__ == '__main__':
+#     port = int(os.environ.get('PORT', 5000))
+#     app.run(host='0.0.0.0', port = port, debug=True)
