@@ -103,9 +103,6 @@ def samp(sample):
                 "sample_values": [result[1] for result in results]}
     return jsonify(sampdict)
 
-if __name__ == "__main__":
-	app.run(port=5005)
-
-# if __name__ == '__main__':
-#     port = int(os.environ.get('PORT', 5000))
-#     app.run(host='0.0.0.0', port = port, debug=True)
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port = port, debug=True)
